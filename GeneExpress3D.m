@@ -253,56 +253,6 @@ function imageExport_Callback(hObject, eventdata, handles)
 % --------------------------------------------------------------------
 function File_Callback(hObject, eventdata, handles)
 
-
-
-% --------------------------------------------------------------------
-function menu_SartSingle_Callback(hObject, eventdata, handles)
-path=get(handles.pathEdit,'String');
-set(handles.statusEdit,'String','Reading Nucleus Image Data');drawnow;
-[nucfile,nucpath]=uigetfile({'*.tif;*.tiff'},'select nucleus stack',path);
-nucstack=tiffread2(sprintf('%s/%s',nucpath,nucfile));
-
-set(handles.statusEdit,'String','Reading FISH Image Data');drawnow;
-[FISHfile,FISHpath]=uigetfile({'*.tif;*.tiff'},'select FISH stack',nucpath);
-FISHstack=tiffread2(sprintf('%s/%s',FISHpath,FISHfile));
-
-set(handles.statusEdit,'String','Converting Nucleus Data to Stack');drawnow;
-handles.nucstack=zeros(nucstack(1).height,nucstack(1).width,length(nucstack));
-for N=1:length(nucstack)
-    handles.nucstack(:,:,N)=double(nucstack(N).data);
-    handles.nucstack(:,:,N)=handles.nucstack(:,:,N)/max(max(handles.nucstack(:,:,N)));
-end
-handles.currentstack1=handles.nucstack;
-
-set(handles.statusEdit,'String','Converting FISH Data to Stack');drawnow;
-handles.FISHstack=zeros(FISHstack(1).height,FISHstack(1).width,length(FISHstack));
-for N=1:length(FISHstack)
-    handles.FISHstack(:,:,N)=double(FISHstack(N).data);
-    handles.FISHstack(:,:,N)=handles.FISHstack(:,:,N)/max(max(handles.FISHstack(:,:,N)));
-end
-handles.currentstack2=handles.FISHstack;
-handles.currentstack3=handles.FISHstack*0;
-
-handles.numim=size(handles.nucstack,3);
-set(handles.ImageSlider,'Max',handles.numim,'Min',1,'SliderStep',[1/handles.numim 5/handles.numim],'Value',1);
-set(handles.statusEdit,'String','');drawnow;
-set(handles.pathEdit,'String',nucpath);drawnow;
-
-set(handles.menu_Mline,'Enable','on');
-set(handles.toolbarMline,'Enable','on');
-
-%set Thresholds based on MCT
-set(handles.NucThreshEdit,'String',...
-    num2str(getThresh(handles.nucstack*255)/255));
-set(handles.FISHThreshEdit,'String',...
-    num2str(getThresh(handles.FISHstack*255)/255));
-handles.double=0;
-guidata(hObject, handles);
-update_images(hObject,handles);
-
-
-
-
 % --------------------------------------------------------------------
 function menu_startDouble_Callback(hObject, eventdata, handles)
 path=get(handles.pathEdit,'String');
