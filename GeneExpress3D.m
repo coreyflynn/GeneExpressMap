@@ -20,8 +20,6 @@ function varargout = GeneExpress3D(varargin)
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help GeneExpress3D
-
 % Last Modified by GUIDE v2.5 28-Jul-2010 16:32:51
 
 % Begin initialization code - DO NOT EDIT
@@ -89,10 +87,6 @@ guidata(hObject, handles);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = GeneExpress3D_OutputFcn(hObject, eventdata, handles) 
-% varargout  cell array for returning output args (see VARARGOUT);
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
@@ -107,10 +101,10 @@ handles.hImg2=imagesc(handles.currentstack2(:,:,Val));colormap(gray);axis off;
 axes(handles.axes4);
 handles.hImg4=imagesc(handles.currentstack3(:,:,Val));colormap(gray);axis off;
 switch get(handles.popupmenu3,'Value')
-    case 1
+    case 1 %pseudo color display
         axes(handles.axes3);
         handles.hImg3=imagesc(handles.overlap(:,:,Val));colormap(gray);axis off;
-    case 2
+    case 2 %RGB display
         tmp=double(handles.currentstack1(:,:,Val));        
         handles.overlap(:,:,3)=tmp/max(max(tmp));
         tmp=double(handles.currentstack2(:,:,Val));
@@ -135,6 +129,7 @@ end
 
 % --- Executes on button press in NucThreshButton.
 function NucThreshButton_Callback(hObject, eventdata, handles)
+%threshold the raw nucleus stack at the value provided by the user
 set(handles.statusEdit,'String','Thresholding Nucleus Stack');drawnow;
 handles.thresh=str2num(get(handles.NucThreshEdit,'String'));
 handles.threshstack=handles.nucstack*0;
@@ -143,7 +138,7 @@ for N=1:size(handles.nucstack,3)
 end
 handles.threshstack=handles.threshstack>handles.thresh;
 
-%handles.threshstack=handles.nucstack>handles.thresh;
+%update the current image stacks and pull down list
 handles.currentstack1=handles.threshstack;
 set(handles.FISHThreshButton,'Enable','on');
 if handles.flags(3)==0
@@ -158,7 +153,7 @@ set(handles.statusEdit,'String','');drawnow;
 
 
 function NucThreshEdit_Callback(hObject, eventdata, handles)
-
+%empty callback for NucTreshEdit
 
 
 % --- Executes during object creation, after setting all properties.
@@ -170,6 +165,7 @@ end
 
 % --- Executes on button press in dilateButton.
 function dilateButton_Callback(hObject, eventdata, handles)
+% dilate the binary image held in openstack
 openVal=str2double(get(handles.NucOpenEdit,'String'));
 set(handles.statusEdit,'String','Opening FISH Stack');drawnow;
 handles.dilatestack=double(handles.openstack*0);
@@ -208,7 +204,7 @@ guidata(hObject, handles);
 
 
 function NucOpenEdit_Callback(hObject, eventdata, handles)
-
+%empty callback for NucOpenEdit
 
 % --- Executes during object creation, after setting all properties.
 function NucOpenEdit_CreateFcn(hObject, eventdata, handles)
@@ -255,6 +251,8 @@ function File_Callback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function menu_startDouble_Callback(hObject, eventdata, handles)
+%begin double label analysis.  This is the default and is now called by
+%start new analysis in the menu
 path=get(handles.pathEdit,'String');
 set(handles.statusEdit,'String','Reading Nucleus Image Data');drawnow;
 [nucfile,nucpath]=uigetfile({'*.tif;*.tiff'},'select nucleus stack',path);
@@ -329,6 +327,8 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function update_images(hObject,handles)
+%update the display of all the images based on the currently active stacks and the 
+%position of the image slider.
 set(handles.statusEdit,'String','Updating Stacks');drawnow;
 Val=round(get(handles.ImageSlider,'Value'));
 switch get(handles.popupmenu3,'Value')
@@ -366,12 +366,9 @@ guidata(hObject, handles);
 
 % --- Executes on button press in stlExport.
 function stlExport_Callback(hObject, eventdata, handles)
+%export data in .stl format for basic use in 3D visualizations
 [file,path]=uiputfile('~/Desktop','Specify .stl base name');
-% set(handles.statusEdit,'String','Writing FISH .stl file');drawnow;
  filetok=strtok(file,'.');
-% FISHfiltstack=normalize_stack(handles.FISHfiltstack);
-% FISHv = isosurface(FISHfiltstack, 0.99);
-% patch2stl(sprintf('%s%s_FISH.stl',path,filetok),FISHv);
 
 nucstack=normalize_stack(handles.nucstack);
 set(handles.statusEdit,'String','Writing Nucleus .stl file');drawnow;
@@ -399,6 +396,7 @@ function menu_Export_Callback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function menu_stlExport_Callback(hObject, eventdata, handles)
+%export in .stl format for basic use in 3D visualizations 
 dir=uigetdir('~/Desktop');
 set(handles.statusEdit,'String','generating nucleus isosurface'); 
 fv=isosurface(handles.nucopenstack,.99);
@@ -415,6 +413,7 @@ set(handles.statusEdit,'String','');
 
 % --------------------------------------------------------------------
 function menu_imageExport_Callback(hObject, eventdata, handles)
+%export the visible image stacks to a user defined directory
 savepath=uigetdir;
 switch get(handles.popupmenu3,'Value')
     case 1
@@ -444,6 +443,7 @@ set(handles.statusEdit,'String','');
 
 % --------------------------------------------------------------------
 function menu_workspaceExport_Callback(hObject, eventdata, handles)
+%export program variables to the base workspace
 assignin('base','nucstack',handles.nucstack);
 assignin('base','FISHstack',handles.FISHstack);
 assignin('base','nucthreshstack',handles.threshstack);
@@ -466,6 +466,8 @@ assignin('base','poslist',handles.poslist);
 
 % --- Executes on button press in OpenNucButton.
 function OpenNucButton_Callback(hObject, eventdata, handles)
+%binary opening of nucleus data using a circular structuring element of user specified
+%size in microns
 open_val=str2double(get(handles.NucOpenEdit,'String'));
 res=str2double(get(handles.xyresEdit,'String'));
 S_size=round(open_val/res);
@@ -520,7 +522,7 @@ handles.currentstack2=handles.posstack;
 
 
 
-%if it is a double label data set, do the same for the second FISH stack
+%do the same for the second FISH stack
 if handles.double==1
     handles.posstack2=handles.nucstack*0;
     handles.poslist2=[];
@@ -546,7 +548,7 @@ if handles.double==1
     end
 end
 
-
+%update listboxes and availability of menu items
 if handles.flags(9)==0
     add_to_listbox(handles,'Positive Nucleus Data',[1 2]);
     add_to_listbox(handles,'Positive Nucleus Data 2',4);
@@ -634,19 +636,12 @@ fillPosNucs(hObject, handles);
 set(handles.statusEdit,'String','');
 display_table(hObject,handles);
 
-%for testing
-%assignin('base','links',handles.links);
-%assignin('base','posstackbi',handles.posstackbi);
-%assignin('base','L',handles.L);
-%assignin('base','Pos',handles.Pos);
-%assignin('base','Z',handles.Z);
-%assignin('base','X',handles.X);
-%assignin('base','Y',handles.Y);
-
 
 
 % --- Executes on button press in FindNucButton.
 function FindNucButton_Callback(hObject, eventdata, handles)
+%use a watershed segmentation followed by object size check to identify nuclei in each
+%2D image slice
 handles.L=handles.nucstack*0;
 D=handles.nucstack*0;
 handles.W=handles.nucstack*0;
@@ -693,6 +688,7 @@ update_images(hObject,handles);
 
 
 function [X,Y,Z]=get_centroids(handles)
+%compute the centroids of all nuclei in 3D space
 L=handles.L;
 X=[];
 Y=[];
@@ -713,6 +709,7 @@ end
 set(handles.statusEdit,'String','');drawnow;
 
 function links=find_links(handles)
+%find the list of indices of linked pixels across each nucleus
 links={};
 refs=1:length(handles.X);
 dist_thresh=get(handles.DistThreshEdit,'String');
@@ -732,7 +729,7 @@ end
 set(handles.menu_CheckCenters,'Enable','on');
 
 function display_table(hObject,handles)
-
+%display summary table of nucleus data
 if handles.double==0
     f=figure('Position',[300 300 450 270]);
     cnames = {'X','Y','Z','Expression'}; 
@@ -767,6 +764,7 @@ end
 
 % --- Executes on button press in FISHThreshButton.
 function FISHThreshButton_Callback(hObject, eventdata, handles)
+%threshold the image stack in FISHStack using the user suplied cutoff
 set(handles.statusEdit,'String','Thresholding FISH Stack');drawnow;
 handles.thresh=str2num(get(handles.FISHThreshEdit,'String'));
 handles.FISHthreshstack=handles.FISHstack>handles.thresh;
@@ -801,6 +799,8 @@ end
 
 % --- Executes on button press in OpenFISHButton.
 function OpenFISHButton_Callback(hObject, eventdata, handles)
+%open the stack in FISHThreshStack with the user suplied value in
+%for the size of the circular structuring element
 open_val=str2double(get(handles.FISHOpenEdit,'String'));
 res=str2double(get(handles.xyresEdit,'String'));
 S_size=round(open_val/res);
@@ -820,6 +820,8 @@ update_images(hObject,handles);
 
 
 % --- Executes on button press in DilateFISHButton.
+%dilate the FISH data using a user specified size of circular
+%structuring element
 function DilateFISHButton_Callback(hObject, eventdata, handles)
 dilate_val=str2double(get(handles.FISHDilateEdit,'String'));
 res=str2double(get(handles.xyresEdit,'String'));
@@ -907,6 +909,7 @@ end
 
 % --- Executes on selection change in popupmenu1.
 function popupmenu1_Callback(hObject, eventdata, handles)
+%change the active stack for currentstack1
 switch get(handles.popupmenu1,'Value')
     case 1
         handles.currentstack1=handles.blank;
@@ -944,6 +947,7 @@ end
 
 % --- Executes on selection change in popupmenu2.
 function popupmenu2_Callback(hObject, eventdata, handles)
+%change the active stack for currentstack2
 switch get(handles.popupmenu2,'Value')
     case 1
         handles.currentstack2=handles.blank;
@@ -994,6 +998,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function add_to_listbox(handles,input_string,IDs)
+%append new menu items to list boxes
 for ii=1:length(IDs)
     switch IDs(ii)
         case 1
@@ -1012,6 +1017,8 @@ for ii=1:length(IDs)
 end
 
 function out=nuc_check(handles,Ltmp,slice)
+%check to see if the size of binarized objects is reasonable given the xy 
+%resolution 
 flag=1;
 xyres=str2num(get(handles.xyresEdit,'String'));
 while flag==1
@@ -1051,6 +1058,7 @@ out=bwlabel(Ltmp>0);
 
 % --------------------------------------------------------------------
 function menu_SaveSet_Callback(hObject, eventdata, handles)
+%save the current process settings to file
 xyres=get(handles.xyresEdit,'String');
 zres=get(handles.zresEdit,'String');
 nucthresh=get(handles.NucThreshEdit,'String');
@@ -1074,6 +1082,7 @@ save(sprintf('%s%s',path,file),'xyres','zres','nucthresh'...
 
 % --------------------------------------------------------------------
 function menu_LoadSet_Callback(hObject, eventdata, handles)
+%load process settings from a file
 [file,path]=uigetfile('.mat','Select Preferences File');
 load(sprintf('%s%s',path,file));
 set(handles.xyresEdit,'String',xyres);
