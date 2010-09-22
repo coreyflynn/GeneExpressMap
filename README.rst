@@ -12,6 +12,11 @@ Features include:
 Requirements
 ============
 
+GeneExpress3D is a runs as a MATLAB GUI application and as such requires a working installation of MATLAB
+
+Support
+=======
+
 GeneExpress3D is provided "as is" and technical support will be provided only as time allows.  Please email flynn.corey@gmail.com for any support requests.
 
 License
