@@ -5,14 +5,14 @@ GeneExpress3D makes possible the rapid, three -dimensional analysis of multiplex
 
 Features include:
 
-- intuitive user interface
+- Intuitive user interface
 - Construction of a true three dimensional model of F-WMISH hybridization data
 - Export of processed image data facilitates visualization through third party software
 
 Requirements
 ============
 
-GeneExpress3D is provided "as is" and technical support will be provided as time provides.  Please email flynn.corey@gmail.com for any support requests.
+GeneExpress3D is provided "as is" and technical support will be provided only as time allows.  Please email flynn.corey@gmail.com for any support requests.
 
 License
 =======
