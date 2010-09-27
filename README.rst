@@ -14,6 +14,11 @@ Requirements
 
 GeneExpress3D is a MATLAB GUI application and as such requires a working installation of MATLAB
 
+Installation and Use
+====================
+
+Click the "Download Source" button above and extract the archive into a folder of your choosing.  Start MATLAB and change its working directory to the folder in which you have extracted the downloaded archive.  At the MATLAB prompt, type "GeneExpress3D" to begin!
+
 Support
 =======
 
