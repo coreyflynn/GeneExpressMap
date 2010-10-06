@@ -1689,12 +1689,20 @@ figure;
 threshline=ones(1,length(handles.ratios2))*0+posval;
 line(1:length(handles.ratios2),threshline,'LineWidth',5,'Color',[0 0 0]);
 hold on;
-line(1:length(handles.ratios),handles.ratios*100,'LineWidth',4,'Color',[0 1 0]);
-hold on;
-line(1:length(handles.ratios2),handles.ratios2*100,'LineWidth',4,'Color',[1 0 0]);
+line([1;1],[0;handles.ratios(1)*100],'LineWidth',4,'Color',[0 1 0]);
+line([1;1],[0;handles.ratios2(1)*100],'LineWidth',4,'Color',[1 0 0]);
+legend('Threshold','FISH1','FISH2');
+for ii=2:length(handles.ratios)
+	line([ii;ii],[0;handles.ratios(ii)*100],'LineWidth',4,'Color',[0 .5 0]);
+end
+for ii=2:length(handles.ratios)
+	line([ii;ii],[0;handles.ratios2(ii)*100],'LineWidth',2,'Color',[.5 0 0]);
+end
+scatter(1:length(handles.ratios),handles.ratios*100,50,[0 1 0],'filled');
+scatter(1:length(handles.ratios),handles.ratios2*100,50,[1 0 0],'filled');
+line(1:length(handles.ratios2),threshline,'LineWidth',5,'Color',[0 0 0]);
 hold off;
 xlabel('Nucleus Number','fontsize',20,'fontweight','b')
 ylabel('Percent Overlap','fontsize',20,'fontweight','b')
-legend('Threshold','FISH1','FISH2');
 
 
