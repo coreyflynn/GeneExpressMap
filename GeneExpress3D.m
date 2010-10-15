@@ -256,15 +256,33 @@ function menu_startDouble_Callback(hObject, eventdata, handles)
 path=get(handles.pathEdit,'String');
 set(handles.statusEdit,'String','Reading Nucleus Image Data');drawnow;
 [nucfile,nucpath]=uigetfile({'*.tif;*.tiff'},'select nucleus stack',path);
-nucstack=tiffread2(sprintf('%s/%s',nucpath,nucfile));
+try
+	nucstack=tiffread2(sprintf('%s/%s',nucpath,nucfile));
+catch
+	errordlg('GeneExpress3D requires tif stacks','Image Stack Import Error');
+	set(handles.statusEdit,'String','');drawnow;
+	return;
+end
 
 set(handles.statusEdit,'String','Reading FISH Image Data');drawnow;
 [FISHfile,FISHpath]=uigetfile({'*.tif;*.tiff'},'select FISH stack',nucpath);
-FISHstack=tiffread2(sprintf('%s/%s',FISHpath,FISHfile));
+try
+	FISHstack=tiffread2(sprintf('%s/%s',FISHpath,FISHfile));
+catch
+	errordlg('GeneExpress3D requires tif stacks','Image Stack Import Error');
+	set(handles.statusEdit,'String','');drawnow;
+	return;
+end
 
 set(handles.statusEdit,'String','Reading FISH Image 2 Data');drawnow;
 [FISHfile,FISHpath]=uigetfile({'*.tif;*.tiff'},'select FISH stack 2',nucpath);
-FISHstack2=tiffread2(sprintf('%s/%s',FISHpath,FISHfile));
+try
+	FISHstack2=tiffread2(sprintf('%s/%s',FISHpath,FISHfile));
+catch
+	errordlg('GeneExpress3D requires tif stacks','Image Stack Import Error');
+	set(handles.statusEdit,'String','');drawnow;
+	return;
+end
 
 set(handles.statusEdit,'String','Converting Nucleus Data to Stack');drawnow;
 handles.nucstack=zeros(nucstack(1).height,nucstack(1).width,length(nucstack));
