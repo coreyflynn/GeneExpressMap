@@ -53,10 +53,15 @@ handles.is=inputStruct;
 set(handles.RedMenu,'Value',3);
 set(handles.GreenMenu,'Value',4);
 set(handles.BlueMenu,'Value',2);
-%set stack dfaults
+
+%set stack defaults
 handles.RedStack=handles.is.FISHthreshstack;
 handles.GreenStack=handles.is.FISHthreshstack2;
 handles.BlueStack=handles.is.threshstack;
+
+%pull resolution info
+handles.xyres=handles.is.xyres;
+handles.zres=handles.is.zres;
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -299,38 +304,37 @@ end
 
 % --- Executes on button press in DisplayButton.
 function DisplayButton_Callback(hObject, eventdata, handles)
+%grab strings from popups
 RedString=grabPopupString(handles,handles.RedMenu);
 GreenString=grabPopupString(handles,handles.GreenMenu);
 BlueString=grabPopupString(handles,handles.BlueMenu);
 
+%grab alpha values
 RedAlpha=str2double(get(handles.RedAlpha,'String'));
 GreenAlpha=str2double(get(handles.GreenAlpha,'String'));
 BlueAlpha=str2double(get(handles.BlueAlpha,'String'));
-%[Greenbi,GreenThresh]=MCTstack(handles.GreenStack);
-%[Bluebi,BlueThresh]=MCTstack(handles.BlueStack);
-%disp('shrinking red data');
-%RedShrink=shrink3D(handles.RedStack,[256 256 10]);
-%[Redbi,RedThresh]=MCTstack(RedShrink);
-%stackview(handles.RedStack);
-disp(sprintf('Calculating %s surface',RedString));
+
+%shrink datasets to a more manageable size
+ShrinkSize=round(size(handles.RedStack)/4);
+RedShrink=shrink3D(handles.RedStack,ShrinkSize)>0;
+GreenShrink=shrink3D(handles.GreenStack,ShrinkSize)>0;
+BlueShrink=shrink3D(handles.BlueStack,ShrinkSize)>0;
+
+%set of figure for surface views
 h=figure;
 set(h,'Color','k');
 set(h,'Name','Surface View','NumberTitle','off');
-tmp=shrink3D(handles.RedStack,[128 128 10])>0;
-plotSurface(tmp,.5,[1 0 0],[1 1 .3],RedAlpha);drawnow;
 hold on;
+
+%calculate and display surfaces
+AspectRatio=[1 1 handles.xyres/handles.zres];
+disp(sprintf('Calculating %s surface',RedString));
+plotSurface(RedShrink,.5,[1 0 0],AspectRatio,RedAlpha);drawnow;
 disp(sprintf('Calculating %s surface',GreenString));
-tmp=shrink3D(handles.GreenStack,[128 128 10])>0;
-plotSurface(tmp,.5,[0 1 0],[1 1 .3],GreenAlpha);drawnow;
+plotSurface(GreenShrink,.5,[0 1 0],AspectRatio,GreenAlpha);drawnow;
 disp(sprintf('Calculating %s surface',BlueString));
-tmp=shrink3D(handles.BlueStack,[128 128 10])>0;
-plotSurface(tmp,.5,[0 0 1],[1 1 .3],BlueAlpha);drawnow;
+plotSurface(BlueShrink,.5,[0 0 1],AspectRatio,BlueAlpha);drawnow;
 hold off;
-
-
-% hObject    handle to DisplayButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 
 % --- Executes on button press in ExportSurface.

@@ -1728,6 +1728,8 @@ ylabel('Percent Overlap','fontsize',20,'fontweight','b')
 
 % --------------------------------------------------------------------
 function menu_surf_Callback(hObject, eventdata, handles)
+handles.xyres=str2double(get(handles.xyresEdit,'String'));
+handles.zres=str2double(get(handles.zresEdit,'String'));
 GeneExpress3DSurfaceView(handles);
 % hObject    handle to menu_surf (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
