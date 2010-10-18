@@ -20,7 +20,7 @@ function varargout = GeneExpress3D(varargin)
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Last Modified by GUIDE v2.5 28-Jul-2010 16:32:51
+% Last Modified by GUIDE v2.5 18-Oct-2010 11:40:57
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -67,6 +67,7 @@ set(handles.menu_visMult,'Enable','off');
 set(handles.menu_visBinary,'Enable','off');
 set(handles.menu_visHeat,'Enable','off');
 set(handles.menu_checkOverlap,'Enable','off');
+set(handles.menu_surf,'Enable','off');
 set(handles.toolbar3Dplot,'Enable','off');
 set(handles.toolbarMline,'Enable','off');
 set(handles.popupmenu3,'Value',2);
@@ -578,6 +579,7 @@ if handles.flags(9)==0
     set(handles.menu_visBinary,'Enable','on');
     set(handles.menu_visHeat,'Enable','on');
     set(handles.menu_checkOverlap,'Enable','on');
+    set(handles.menu_surf,'Enable','on');
 end
 set(handles.popupmenu2,'Value',10);
 set(handles.popupmenu4,'Value',10);
@@ -1722,5 +1724,13 @@ line(1:length(handles.ratios2),threshline,'LineWidth',5,'Color',[0 0 0]);
 hold off;
 xlabel('Nucleus Number','fontsize',20,'fontweight','b')
 ylabel('Percent Overlap','fontsize',20,'fontweight','b')
+
+
+% --------------------------------------------------------------------
+function menu_surf_Callback(hObject, eventdata, handles)
+GeneExpress3DSurfaceView(handles);
+% hObject    handle to menu_surf (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
 
 
