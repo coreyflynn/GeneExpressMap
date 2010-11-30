@@ -316,8 +316,11 @@ BlueAlpha=str2double(get(handles.BlueAlpha,'String'));
 
 %shrink datasets to a more manageable size
 ShrinkSize=round(size(handles.RedStack)/4);
+disp(sprintf('Shrinking %s',RedString));
 RedShrink=shrink3D(handles.RedStack,ShrinkSize)>0;
+disp(sprintf('Shrinking %s',GreenString));
 GreenShrink=shrink3D(handles.GreenStack,ShrinkSize)>0;
+disp(sprintf('Shrinking %s',BlueString));
 BlueShrink=shrink3D(handles.BlueStack,ShrinkSize)>0;
 
 %set of figure for surface views
