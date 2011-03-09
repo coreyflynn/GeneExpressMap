@@ -1093,7 +1093,7 @@ overlap=get(handles.overlapEdit,'String');
 distthresh=get(handles.DistThreshEdit,'String');
 
 [file,path]=uiputfile('.mat','Save Preferences',...
-    sprintf('Embryo3DPref%s.mat',date));
+    sprintf('GeneExpressMapPrefs%s.mat',date));
 save(sprintf('%s%s',path,file),'xyres','zres','nucthresh'...
     ,'FISHthresh','nucopen','FISHopen','FISHdilate'...
     ,'overlap','distthresh','FISHthresh2','FISHopen2'...
@@ -1731,6 +1731,4 @@ function menu_surf_Callback(hObject, eventdata, handles)
 handles.xyres=str2double(get(handles.xyresEdit,'String'));
 handles.zres	=str2double(get(handles.zresEdit,'String'));
 GeneExpressMapSurfaceView(handles);
-% hObject    handle to menu_surf (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+
