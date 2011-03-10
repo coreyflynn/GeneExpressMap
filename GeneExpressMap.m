@@ -311,7 +311,6 @@ handles.currentstack3=handles.FISHstack2;
 
 handles.numim=size(handles.nucstack,3);
 set(handles.ImageSlider,'Max',handles.numim,'Min',1,'SliderStep',[1/handles.numim 5/handles.numim],'Value',1);
-set(handles.statusEdit,'String','');drawnow;
 set(handles.pathEdit,'String',nucpath);drawnow;
 
 handles.blank=handles.currentstack1*0;
@@ -322,6 +321,7 @@ set(handles.popupmenu4,'Value',3);
 set(handles.menu_Mline,'Enable','on');
 set(handles.toolbarMline,'Enable','on');
 %set Thresholds based on MCT
+set(handles.statusEdit,'String','Computing Thresholds');drawnow;
 set(handles.NucThreshEdit,'String',...
     num2str(getThresh(handles.nucstack*255)/255));
 set(handles.FISHThreshEdit,'String',...
@@ -329,6 +329,7 @@ set(handles.FISHThreshEdit,'String',...
 set(handles.FISHThreshEdit2,'String',...
     num2str(getThresh(handles.FISHstack2*255)/255));
 handles.double=1;
+set(handles.statusEdit,'String','');drawnow;
 guidata(hObject, handles);
 update_images(hObject,handles);
 
@@ -437,24 +438,45 @@ savepath=uigetdir;
 switch get(handles.popupmenu3,'Value')
     case 1
         for N=1:size(handles.currentstack1,3)
-        set(handles.statusEdit,'String','Saving images');
-        imwrite(handles.currentstack1(:,:,N),sprintf('%s/Stack1_%g.tif',savepath,N));
-        imwrite(handles.currentstack2(:,:,N),sprintf('%s/Stack2_%g.tif',savepath,N));
-        imwrite(handles.currentstack3(:,:,N),sprintf('%s/Stack3_%g.tif',savepath,N));
-        imwrite(handles.overlap(:,:,N),sprintf('%s/overlap_%g.tif',savepath,N));
-        end
+			set(handles.statusEdit,'String','Saving images');
+			%write single image files
+			imwrite(handles.currentstack1(:,:,N),sprintf('%s/Stack1_%g.tif',savepath,N));
+			imwrite(handles.currentstack2(:,:,N),sprintf('%s/Stack2_%g.tif',savepath,N));
+			imwrite(handles.currentstack3(:,:,N),sprintf('%s/Stack3_%g.tif',savepath,N));
+			imwrite(handles.overlap(:,:,N),sprintf('%s/overlap_%g.tif',savepath,N));
+			%write tiff stack files
+			if N==1
+				imwrite(handles.currentstack1(:,:,N),sprintf('%s/Stack1.tif',savepath),'WriteMode','overwrite');
+				imwrite(handles.currentstack1(:,:,N),sprintf('%s/Stack2.tif',savepath),'WriteMode','overwrite');
+				imwrite(handles.currentstack1(:,:,N),sprintf('%s/Stack3.tif',savepath),'WriteMode','overwrite');
+			else
+				imwrite(handles.currentstack1(:,:,N),sprintf('%s/Stack1.tif',savepath),'WriteMode','append');
+				imwrite(handles.currentstack1(:,:,N),sprintf('%s/Stack2.tif',savepath),'WriteMode','append');
+				imwrite(handles.currentstack1(:,:,N),sprintf('%s/Stack3.tif',savepath),'WriteMode','append');
+		   end
+       end
     case 2
         tmpim=zeros(size(handles.currentstack1,1),size(handles.currentstack1,2),3);
         for N=1:size(handles.currentstack1,3)
-        set(handles.statusEdit,'String','Saving images');
-        imwrite(handles.currentstack1(:,:,N),sprintf('%s/Stack1_%g.tif',savepath,N));
-        imwrite(handles.currentstack2(:,:,N),sprintf('%s/Stack2_%g.tif',savepath,N));
-        imwrite(handles.currentstack3(:,:,N),sprintf('%s/Stack3_%g.tif',savepath,N));
-        tmpim(:,:,3)=handles.currentstack1(:,:,N);
-        tmpim(:,:,2)=handles.currentstack2(:,:,N);
-        tmpim(:,:,1)=handles.currentstack3(:,:,N);
-        imwrite(tmpim,sprintf('%s/overlap_%g.tif',savepath,N)...
-            );
+			set(handles.statusEdit,'String','Saving images');
+			imwrite(handles.currentstack1(:,:,N),sprintf('%s/Stack1_%g.tif',savepath,N));
+			imwrite(handles.currentstack2(:,:,N),sprintf('%s/Stack2_%g.tif',savepath,N));
+			imwrite(handles.currentstack3(:,:,N),sprintf('%s/Stack3_%g.tif',savepath,N));
+			tmpim(:,:,3)=handles.currentstack1(:,:,N);
+			tmpim(:,:,2)=handles.currentstack2(:,:,N);
+			tmpim(:,:,1)=handles.currentstack3(:,:,N);
+			imwrite(tmpim,sprintf('%s/overlap_%g.tif',savepath,N)...
+				);
+			%write tiff stack files
+			if N==1
+				imwrite(handles.currentstack1(:,:,N),sprintf('%s/Stack1.tif',savepath),'WriteMode','overwrite','Compression','none');
+				imwrite(handles.currentstack2(:,:,N),sprintf('%s/Stack2.tif',savepath),'WriteMode','overwrite','Compression','none');
+				imwrite(handles.currentstack3(:,:,N),sprintf('%s/Stack3.tif',savepath),'WriteMode','overwrite','Compression','none');
+			else
+				imwrite(handles.currentstack1(:,:,N),sprintf('%s/Stack1.tif',savepath),'WriteMode','append','Compression','none');
+				imwrite(handles.currentstack2(:,:,N),sprintf('%s/Stack2.tif',savepath),'WriteMode','append','Compression','none');
+				imwrite(handles.currentstack3(:,:,N),sprintf('%s/Stack3.tif',savepath),'WriteMode','append','Compression','none');
+		   end
         end
 end
 set(handles.statusEdit,'String','');
