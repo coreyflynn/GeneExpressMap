@@ -20,7 +20,7 @@ function varargout = GeneExpressMap(varargin)
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Last Modified by GUIDE v2.5 09-Mar-2011 12:35:33
+% Last Modified by GUIDE v2.5 13-Jun-2011 14:43:04
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -50,6 +50,7 @@ axes(handles.axes2);axis off;
 axes(handles.axes3);axis off;
 axes(handles.axes4);axis off;
 set(handles.pathEdit,'String','~/Desktop');
+set(handles.NucThreshButton,'Enable','off');
 set(handles.FISHThreshButton,'Enable','off');
 set(handles.FISHThresh2Button,'Enable','off');
 set(handles.OpenNucButton,'Enable','off');
@@ -130,14 +131,14 @@ end
 
 % --- Executes on button press in NucThreshButton.
 function NucThreshButton_Callback(hObject, eventdata, handles)
+%set the user data of the stopbutton to 0
+set(handles.stopButton,'UserData',0);
+
 %threshold the raw nucleus stack at the value provided by the user
 set(handles.statusEdit,'String','Thresholding Nucleus Stack');drawnow;
 handles.thresh=str2num(get(handles.NucThreshEdit,'String'));
 handles.threshstack=handles.nucstack*0;
-for N=1:size(handles.nucstack,3)
-    handles.threshstack(:,:,N)=medfilt2(handles.nucstack(:,:,N));
-end
-handles.threshstack=handles.threshstack>handles.thresh;
+handles.threshstack=handles.nucstack>handles.thresh;
 
 %update the current image stacks and pull down list
 handles.currentstack1=handles.threshstack;
@@ -254,6 +255,8 @@ function File_Callback(hObject, eventdata, handles)
 function menu_startDouble_Callback(hObject, eventdata, handles)
 %begin double label analysis.  This is the default and is now called by
 %start new analysis in the menu
+
+%load the nucleus image stack from user specified path
 path=get(handles.pathEdit,'String');
 set(handles.statusEdit,'String','Reading Nucleus Image Data');drawnow;
 [nucfile,nucpath]=uigetfile({'*.tif;*.tiff'},'select nucleus stack',path);
@@ -265,6 +268,7 @@ catch
 	return;
 end
 
+%load the FISH image stack from user specified path
 set(handles.statusEdit,'String','Reading FISH Image Data');drawnow;
 [FISHfile,FISHpath]=uigetfile({'*.tif;*.tiff'},'select FISH stack',nucpath);
 try
@@ -275,6 +279,7 @@ catch
 	return;
 end
 
+%load the FISH2 image stack from user specified path
 set(handles.statusEdit,'String','Reading FISH Image 2 Data');drawnow;
 [FISHfile,FISHpath]=uigetfile({'*.tif;*.tiff'},'select FISH stack 2',nucpath);
 try
@@ -285,6 +290,24 @@ catch
 	return;
 end
 
+%check for dimension mismatch in the loaded data sets
+nucSize = size(nucstack);
+FISHSize = size(FISHstack);
+FISHSize2 = size(FISHstack2);
+
+if nucSize(1) ~= FISHSize(1) ||  nucSize(1) ~= FISHSize2(1)
+	errordlg('GeneExpressMap requires image stacks of equal size','Image Size Error');
+	set(handles.statusEdit,'String','');drawnow;
+	return;
+end
+
+if nucSize(2) ~= FISHSize(2) ||  nucSize(2) ~= FISHSize2(2)
+	errordlg('GeneExpressMap requires image stacks of equal size','Image Size Error');
+	set(handles.statusEdit,'String','');drawnow;
+	return;
+end
+
+%convert the nucleus data into a double stack and normalize from 0 to 1 for display
 set(handles.statusEdit,'String','Converting Nucleus Data to Stack');drawnow;
 handles.nucstack=zeros(nucstack(1).height,nucstack(1).width,length(nucstack));
 for N=1:length(nucstack)
@@ -293,6 +316,7 @@ for N=1:length(nucstack)
 end
 handles.currentstack1=handles.nucstack;
 
+%convert the FISH data into a double stack and normalize from 0 to 1 for display
 set(handles.statusEdit,'String','Converting FISH Data to Stack');drawnow;
 handles.FISHstack=zeros(FISHstack(1).height,FISHstack(1).width,length(FISHstack));
 for N=1:length(FISHstack)
@@ -301,6 +325,7 @@ for N=1:length(FISHstack)
 end
 handles.currentstack2=handles.FISHstack;
 
+%convert the FISH2 data into a double stack and normalize from 0 to 1 for display
 set(handles.statusEdit,'String','Converting FISH Data 2 to Stack');drawnow;
 handles.FISHstack2=zeros(FISHstack2(1).height,FISHstack2(1).width,length(FISHstack2));
 for N=1:length(FISHstack)
@@ -309,17 +334,22 @@ for N=1:length(FISHstack)
 end
 handles.currentstack3=handles.FISHstack2;
 
+%set up the slider limit based on the loaded images
 handles.numim=size(handles.nucstack,3);
 set(handles.ImageSlider,'Max',handles.numim,'Min',1,'SliderStep',[1/handles.numim 5/handles.numim],'Value',1);
 set(handles.pathEdit,'String',nucpath);drawnow;
 
+%build the blank display array
 handles.blank=handles.currentstack1*0;
 
+%set the status of UI widgets apropriately
 set(handles.popupmenu1,'Value',2);
 set(handles.popupmenu2,'Value',3);
 set(handles.popupmenu4,'Value',3);
 set(handles.menu_Mline,'Enable','on');
 set(handles.toolbarMline,'Enable','on');
+set(handles.NucThreshButton,'Enable','on');
+
 %set Thresholds based on MCT
 set(handles.statusEdit,'String','Computing Thresholds');drawnow;
 set(handles.NucThreshEdit,'String',...
@@ -336,9 +366,6 @@ update_images(hObject,handles);
 
 
 function statusEdit_Callback(hObject, eventdata, handles)
-
-
-
 % --- Executes during object creation, after setting all properties.
 function statusEdit_CreateFcn(hObject, eventdata, handles)
 
@@ -434,7 +461,7 @@ set(handles.statusEdit,'String','');
 % --------------------------------------------------------------------
 function menu_imageExport_Callback(hObject, eventdata, handles)
 %export the visible image stacks to a user defined directory
-savepath=uigetdir;
+savepath=uigetdir('~/Desktop');
 switch get(handles.popupmenu3,'Value')
     case 1
         for N=1:size(handles.currentstack1,3)
@@ -535,6 +562,7 @@ handles.posstack=handles.nucstack*0;
 handles.posval=str2double(get(handles.overlapEdit,'String'))/100;
 handles.poslist=[];
 handles.nuclist=[];
+set(handles.stopButton,'Enable','on');
 for N=1:size(handles.nucstack,3)
     tmpL=handles.L(:,:,N);
     tmpO=handles.FISHdilatestack(:,:,N);
@@ -545,6 +573,14 @@ for N=1:size(handles.nucstack,3)
     handles.poslist=horzcat(handles.poslist,0);
     handles.nuclist=horzcat(handles.nuclist,1);
     for M=2:max(tmpL(:))
+        %check for user interupt
+        if get(handles.stopButton,'UserData') == 1
+            set(handles.statusEdit,'String','');drawnow;
+            set(handles.stopButton,'UserData',0);
+            update_images(hObject,handles);
+            set(handles.stopButton,'Enable','off');
+            return;
+        end
         found=find(tmpL==M);
         %flag nucleus slices as positive if more than a user defined
         %percentage of the nucleus is overlapping a region of FISH
@@ -577,6 +613,14 @@ if handles.double==1
         handles.poslist2=horzcat(handles.poslist2,0);
         handles.nuclist2=horzcat(handles.nuclist2,1);
         for M=2:max(tmpL(:))
+            %check for user interupt
+            if get(handles.stopButton,'UserData') == 1
+                set(handles.statusEdit,'String','');drawnow;
+                set(handles.stopButton,'UserData',0);
+                update_images(hObject,handles);
+                set(handles.stopButton,'Enable','off');
+                return;
+            end
             found=find(tmpL==M);
             %flag nucleus slices as positive if more than a user defined
             %percentage of the nucleus is overlapping a region of FISH
@@ -625,6 +669,14 @@ handles.ratios2=[];
 xyres=str2num(get(handles.xyresEdit,'String'));
 zres=str2num(get(handles.zresEdit,'String'));
 for N=1:length(handles.links)
+        %check for user interupt
+        if get(handles.stopButton,'UserData') == 1
+        set(handles.statusEdit,'String','');drawnow;
+        set(handles.stopButton,'UserData',0);
+        update_images(hObject,handles);
+        set(handles.stopButton,'Enable','off');
+        return;
+    end
     handles.conX=horzcat(handles.conX,mean(handles.X(handles.links{N}))...
         *xyres);
     handles.conY=horzcat(handles.conY,mean(handles.Y(handles.links{N}))...
@@ -675,6 +727,7 @@ end
 
 guidata(hObject, handles);
 fillPosNucs(hObject, handles);
+set(handles.stopButton,'Enable','off');
 set(handles.statusEdit,'String','');
 display_table(hObject,handles);
 
@@ -688,7 +741,16 @@ handles.L=handles.nucstack*0;
 D=handles.nucstack*0;
 handles.W=handles.nucstack*0;
 Lsize=size(handles.L,3);
+set(handles.stopButton,'Enable','on');
 for N=1:Lsize
+    %check for user interupt
+	if get(handles.stopButton,'UserData') == 1
+		set(handles.statusEdit,'String','');drawnow;
+        set(handles.stopButton,'UserData',0);
+        update_images(hObject,handles);
+        set(handles.stopButton,'Enable','off');
+		return;
+	end
     set(handles.statusEdit,'String',sprintf('Computing Distance Image: Slice %g of %g'...
        ,N,Lsize));drawnow;
     tmp=handles.nucopenstack(:,:,N);
@@ -710,11 +772,12 @@ for N=1:Lsize
     handles.L(:,:,N)=Ltmp;
     axes(handles.axes3);imagesc(Ltmp>0);drawnow;
 end
+set(handles.stopButton,'Enable','off');
 handles.D=D;
 handles.X=[];
 handles.Y=[];
 handles.Z=[];
-[handles.X,handles.Y,handles.Z]=get_centroids(handles);
+[handles.X,handles.Y,handles.Z]=get_centroids(hObject,handles);
 
 set(handles.statusEdit,'String','');drawnow;
 
@@ -729,16 +792,25 @@ guidata(hObject, handles);
 update_images(hObject,handles);
 
 
-function [X,Y,Z]=get_centroids(handles)
+function [X,Y,Z]=get_centroids(hObject,handles)
 %compute the centroids of all nuclei in 3D space
 L=handles.L;
 X=[];
 Y=[];
 Z=[];
 Lsize=size(L,3);
+set(handles.stopButton,'Enable','on');
 for N=1:Lsize
-set(handles.statusEdit,'String',sprintf('Getting Centroids: slice %g of %g'...
-    ,N,Lsize));drawnow;    
+        %check for user interupt
+        if get(handles.stopButton,'UserData') == 1
+            set(handles.statusEdit,'String','');drawnow;
+            set(handles.stopButton,'UserData',0);
+            update_images(hObject,handles);
+            set(handles.stopButton,'Enable','off');
+            return;
+        end
+    set(handles.statusEdit,'String',sprintf('Getting Centroids: slice %g of %g'...
+                                                                                     ,N,Lsize));drawnow;    
     props=regionprops(L(:,:,N));
     for M=1:length(props)
         tmp=props(M).Centroid;
@@ -747,7 +819,7 @@ set(handles.statusEdit,'String',sprintf('Getting Centroids: slice %g of %g'...
     end
     Z=horzcat(Z,ones(1,length(props))*N);
 end
-
+set(handles.stopButton,'Enable','off');
 set(handles.statusEdit,'String','');drawnow;
 
 function links=find_links(handles)
@@ -757,7 +829,16 @@ refs=1:length(handles.X);
 dist_thresh=get(handles.DistThreshEdit,'String');
 xyres=str2num(get(handles.xyresEdit,'String'));
 zres=str2num(get(handles.zresEdit,'String'));
+set(handles.stopButton,'Enable','on');
 while numel(handles.X)>0
+        %check for user interupt
+        if get(handles.stopButton,'UserData') == 1
+            set(handles.statusEdit,'String','');drawnow;
+            set(handles.stopButton,'UserData',0);
+            update_images(hObject,handles);
+            set(handles.stopButton,'Enable','off');
+            return;
+        end
         eudist=(sqrt(((handles.X-handles.X(1))*xyres).^2+...
         ((handles.Y-handles.Y(1))*xyres).^2+...
             ((handles.Z-handles.Z(1))*zres).^2));
@@ -768,6 +849,7 @@ while numel(handles.X)>0
             handles.Y(found)=[];
             handles.Z(found)=[];
 end
+set(handles.stopButton,'Enable','off');
 set(handles.menu_CheckCenters,'Enable','on');
 
 function display_table(hObject,handles)
@@ -1261,7 +1343,7 @@ display3D(handles);
 
 % --------------------------------------------------------------------
 function menu_textExport_Callback(hObject, eventdata, handles)
-upath=uigetdir;
+upath=uigetdir('~/Desktop');
 negx=[];
 negy=[];
 negz=[];
@@ -1754,3 +1836,8 @@ handles.xyres=str2double(get(handles.xyresEdit,'String'));
 handles.zres	=str2double(get(handles.zresEdit,'String'));
 GeneExpressMapSurfaceView(handles);
 
+
+% --- Executes on button press in stopButton.
+function stopButton_Callback(hObject, eventdata, handles)
+set(handles.stopButton,'UserData',1);
+guidata(hObject, handles); 
