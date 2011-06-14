@@ -20,7 +20,7 @@ function varargout = GeneExpressMap(varargin)
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Last Modified by GUIDE v2.5 13-Jun-2011 14:43:04
+% Last Modified by GUIDE v2.5 14-Jun-2011 14:49:44
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -44,6 +44,9 @@ end
 
 % --- Executes just before GeneExpressMap is made visible.
 function GeneExpressMap_OpeningFcn(hObject, eventdata, handles, varargin)
+%link a closing function to the close of the GUI
+set(handles.figure1,'CloseRequestFcn',@closeGUI);
+
 %set the initial state of axes and GUI objects
 axes(handles.axes1);axis off;
 axes(handles.axes2);axis off;
@@ -71,11 +74,13 @@ set(handles.menu_checkOverlap,'Enable','off');
 set(handles.menu_surf,'Enable','off');
 set(handles.toolbar3Dplot,'Enable','off');
 set(handles.toolbarMline,'Enable','off');
+set(handles.stopButton,'Enable','off');
 set(handles.popupmenu3,'Value',2);
 
 %set up processing flags for later use
 handles.flags=[0 0 0 0 0 0 0 0 0 0 0 0];
 handles.LUTFlag=0;
+handles.saveFlag = 0;
 
 
 % Choose default command line output for GeneExpressMap
@@ -408,6 +413,9 @@ handles.hImg4=imagesc(handles.currentstack3(:,:,Val));colormap(gray);axis off;
 handles.XData=get(handles.hImg1,'XData');
 handles.YData=get(handles.hImg1,'YData');
 set(handles.statusEdit,'String','');drawnow;
+
+%update the saveFlag and the guidata
+handles.saveFlag = 0;
 guidata(hObject, handles);
 
 
@@ -1841,3 +1849,180 @@ GeneExpressMapSurfaceView(handles);
 function stopButton_Callback(hObject, eventdata, handles)
 set(handles.stopButton,'UserData',1);
 guidata(hObject, handles); 
+
+
+% --------------------------------------------------------------------
+function menu_SaveSession_Callback(hObject, eventdata, handles)
+%build a cell containing all possible application variables
+variableNames = {'flags','LUTFlag','output','currentstack1', 'nucstack',...
+            'FISHstack', 'currentstack2', 'FISHstack2', 'currentstack3', 'numim',...
+			'blank', 'double', 'overlap', 'hImg3', 'hImg1', 'hImg2',...
+			'hImg4', 'XData', 'YData', 'thresh', 'threshstack',...
+			'FISHthreshstack', 'FISHthreshstack2', 's', 'nucopenstack'...
+			'FISHopenstack', 'FISHdilatestack', 'FISHopenstack2',...
+			'FISHdilatestack2','L', 'W', 'D', 'X', 'Y', 'Z',...
+			'posstack', 'posval', 'poslist', 'nuclist', 'posstackbi',...
+			'posstack2', 'poslist2', 'nuclist2', 'links', 'conX', 'conY',...
+			'conZ', 'conposlist','Pos', 'conposlist2', 'Pos2',...
+			'condoublelist', 'doublePos', 'ratios', 'ratios2',...
+            'posstackbi2'};
+
+%iterate through all of the variables in the cell and attempt to get thier
+%values.  If they do not exist, fill in [] for thier value
+variableValues = cell(1,length(variableNames));
+for ii=1:length(variableNames)
+    if isfield(handles,variableNames{ii}) == 1
+        variableValues{ii} = getfield(handles,variableNames{ii});
+    else
+        variableValues{ii} = [];
+    end
+end
+
+%grab all of the current states of the wdigets and store them
+widgetState.pathEdit = get(handles.pathEdit,'String');
+widgetState. NucThreshButton = get(handles.NucThreshButton,'Enable');
+widgetState.FISHThreshButton = get(handles.FISHThreshButton,'Enable');
+widgetState.FISHThresh2Button = get(handles.FISHThresh2Button,'Enable');
+widgetState.OpenNucButton = get(handles.OpenNucButton,'Enable');
+widgetState.OpenFISHButton = get(handles.OpenFISHButton,'Enable');
+widgetState.OpenFISH2Button = get(handles.OpenFISH2Button,'Enable');
+widgetState.DilateFISHButton = get(handles.DilateFISHButton,'Enable');
+widgetState.DilateFISH2Button = get(handles.DilateFISH2Button,'Enable');
+widgetState.FindNucButton = get(handles.FindNucButton,'Enable');
+widgetState.FindPosNucButton = get(handles.FindPosNucButton,'Enable');
+widgetState.CheckCenters = get(handles.menu_CheckCenters,'Enable');
+widgetState.menu_Mline = get(handles.menu_Mline,'Enable');
+widgetState.menu_3D = get(handles.menu_3D,'Enable');
+widgetState.menu_visMode = get(handles.menu_visMode,'Enable');
+widgetState.menu_visMult = get(handles.menu_visMult,'Enable');
+widgetState.menu_visBinary = get(handles.menu_visBinary,'Enable');
+widgetState.menu_visHeat = get(handles.menu_visHeat,'Enable');
+widgetState.menu_checkOverlap = get(handles.menu_checkOverlap,'Enable');
+widgetState.menu_surf = get(handles.menu_surf,'Enable');
+widgetState.toolbar3Dplot = get(handles.toolbar3Dplot,'Enable');
+widgetState.toolbarMline = get(handles.toolbarMline,'Enable');
+widgetState.popupmenu3 = get(handles.popupmenu3,'Value');
+widgetState.popupmenu1String = get(handles.popupmenu1,'String');
+widgetState.popupmenu1 = get(handles.popupmenu1,'Value');
+widgetState.popupmenu2String = get(handles.popupmenu2,'String');
+widgetState.popupmenu2 = get(handles.popupmenu2,'Value');
+widgetState.popupmenu4String = get(handles.popupmenu4,'String');
+widgetState.popupmenu4 = get(handles.popupmenu4,'Value');
+widgetState.xyresEdit = get(handles.xyresEdit,'String');
+widgetState.zresEdit = get(handles.zresEdit,'String');
+widgetState.NucThreshEdit = get(handles.NucThreshEdit,'String');
+widgetState.FISHThreshEdit = get(handles.FISHThreshEdit,'String');
+widgetState.FISHThreshEdit2 = get(handles.FISHThreshEdit2,'String');
+widgetState.NucOpenEdit = get(handles.NucOpenEdit,'String');
+widgetState.FISHOpenEdit = get(handles.FISHOpenEdit,'String');
+widgetState.FISHDilateEdit = get(handles.FISHDilateEdit,'String');
+widgetState.FISHOpenEdit = get(handles.FISHOpenEdit2,'String');
+widgetState.FISHDilateEdit2 = get(handles.FISHDilateEdit2,'String');
+widgetState.DistThreshEdit= get(handles.DistThreshEdit,'String');
+widgetState.overlapEdit= get(handles.overlapEdit,'String');
+widgetState.imageSliderVal= get(handles.ImageSlider,'Value');
+widgetState.imageSliderMin= get(handles.ImageSlider,'Min');
+widgetState.imageSliderMax= get(handles.ImageSlider,'Max');
+
+%save the generated data to file
+[file,path]=uiputfile('.mat','Save Session',...
+    sprintf('GeneExpressMapSession%s.mat',date));
+save(sprintf('%s%s',path,file),'variableNames','variableValues','widgetState');
+
+%update the saveFlag
+handles.saveFlag = 1;
+guidata(hObject, handles); 
+
+
+% --------------------------------------------------------------------
+function menu_LoadSession_Callback(hObject, eventdata, handles)
+[file,path]=uigetfile('.mat','Select Session File');
+load(sprintf('%s%s',path,file));
+
+%build a cell containing all possible application variables
+variableNames = {'flags','LUTFlag','output','currentstack1', 'nucstack',...
+            'FISHstack', 'currentstack2', 'FISHstack2', 'currentstack3', 'numim',...
+			'blank', 'double', 'overlap', 'hImg3', 'hImg1', 'hImg2',...
+			'hImg4', 'XData', 'YData', 'thresh', 'threshstack',...
+			'FISHthreshstack', 'FISHthreshstack2', 's', 'nucopenstack'...
+			'FISHopenstack', 'FISHdilatestack', 'FISHopenstack2',...
+			'FISHdilatestack2','L', 'W', 'D', 'X', 'Y', 'Z',...
+			'posstack', 'posval', 'poslist', 'nuclist', 'posstackbi',...
+			'posstack2', 'poslist2', 'nuclist2', 'links', 'conX', 'conY',...
+			'conZ', 'conposlist','Pos', 'conposlist2', 'Pos2',...
+			'condoublelist', 'doublePos', 'ratios', 'ratios2',...
+            'posstackbi2'};
+
+%iterate through all of the variables in the cell and attempt to set thier
+%values.  If they do not exist, skip them
+for ii=1:length(variableNames)
+    if isempty(variableValues{ii}) == 0
+        eval(sprintf('handles.%s=variableValues{ii};',variableNames{ii}));
+    end
+end
+
+%set all of the current states of the wdigets from the loaded file
+set(handles.pathEdit,'String',widgetState.pathEdit);
+set(handles.NucThreshButton,'Enable',widgetState. NucThreshButton);
+set(handles.FISHThreshButton,'Enable',widgetState.FISHThreshButton);
+set(handles.FISHThresh2Button,'Enable',widgetState.FISHThresh2Button);
+set(handles.OpenNucButton,'Enable',widgetState.OpenNucButton);
+set(handles.OpenFISHButton,'Enable',widgetState.OpenFISHButton);
+set(handles.OpenFISH2Button,'Enable',widgetState.OpenFISH2Button);
+set(handles.DilateFISHButton,'Enable',widgetState.DilateFISHButton);
+set(handles.DilateFISH2Button,'Enable',widgetState.DilateFISH2Button);
+set(handles.FindNucButton,'Enable',widgetState.FindNucButton);
+set(handles.FindPosNucButton,'Enable',widgetState.FindPosNucButton);
+set(handles.menu_CheckCenters,'Enable',widgetState.CheckCenters);
+set(handles.menu_Mline,'Enable',widgetState.menu_Mline);
+set(handles.menu_3D,'Enable',widgetState.menu_3D);
+set(handles.menu_visMode,'Enable',widgetState.menu_visMode);
+set(handles.menu_visMult,'Enable',widgetState.menu_visMult);
+set(handles.menu_visBinary,'Enable',widgetState.menu_visBinary);
+set(handles.menu_visHeat,'Enable',widgetState.menu_visHeat);
+set(handles.menu_checkOverlap,'Enable',widgetState.menu_checkOverlap);
+set(handles.menu_surf,'Enable',widgetState.menu_surf);
+set(handles.toolbar3Dplot,'Enable',widgetState.toolbar3Dplot);
+set(handles.toolbarMline,'Enable',widgetState.toolbarMline);
+set(handles.popupmenu3,'Value',widgetState.popupmenu3);
+set(handles.popupmenu1,'String',widgetState.popupmenu1String);
+set(handles.popupmenu1,'Value',widgetState.popupmenu1);
+set(handles.popupmenu2,'String',widgetState.popupmenu2String);
+set(handles.popupmenu2,'Value',widgetState.popupmenu2);
+set(handles.popupmenu4,'String',widgetState.popupmenu4String);
+set(handles.popupmenu4,'Value',widgetState.popupmenu4);
+set(handles.xyresEdit,'String',widgetState.xyresEdit);
+set(handles.zresEdit,'String',widgetState.zresEdit);
+set(handles.NucThreshEdit,'String',widgetState.NucThreshEdit);
+set(handles.FISHThreshEdit,'String',widgetState.FISHThreshEdit);
+set(handles.FISHThreshEdit2,'String',widgetState.FISHThreshEdit2);
+set(handles.NucOpenEdit,'String',widgetState.NucOpenEdit);
+set(handles.FISHOpenEdit,'String',widgetState.FISHOpenEdit);
+set(handles.FISHDilateEdit,'String',widgetState.FISHDilateEdit);
+set(handles.FISHOpenEdit2,'String',widgetState.FISHOpenEdit);
+set(handles.FISHDilateEdit2,'String',widgetState.FISHDilateEdit2);
+set(handles.DistThreshEdit,'String',widgetState.DistThreshEdit);
+set(handles.overlapEdit,'String',widgetState.overlapEdit);
+set(handles.ImageSlider,'Value',widgetState.imageSliderVal);
+set(handles.ImageSlider,'Min',widgetState.imageSliderMin);
+set(handles.ImageSlider,'Max',widgetState.imageSliderMax);
+
+%update the guidata and images
+update_images(hObject,handles);
+guidata(hObject, handles); 
+
+function closeGUI(src,evt)
+handles = guidata(src);
+if handles.saveFlag == 0
+    selection = questdlg('You have not saved your current session.  Would you like to close without saving?',...
+                         'Close Without Saving',...
+                         'No','Yes','No');
+    switch selection,
+       case 'No',
+        return
+       case 'Yes'
+         delete(gcf);
+    end
+else
+    delete(gcf);
+end
