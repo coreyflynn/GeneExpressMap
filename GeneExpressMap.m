@@ -261,44 +261,88 @@ function menu_startDouble_Callback(hObject, eventdata, handles)
 %begin double label analysis.  This is the default and is now called by
 %start new analysis in the menu
 
+
 %load the nucleus image stack from user specified path
 path=get(handles.pathEdit,'String');
-set(handles.statusEdit,'String','Reading Nucleus Image Data');drawnow;
-[nucfile,nucpath]=uigetfile({'*.tif;*.tiff'},'select nucleus stack',path);
-try
-	nucstack=tiffread2(sprintf('%s/%s',nucpath,nucfile));
-catch
-	errordlg('GeneExpressMap requires tif stacks','Image Stack Import Error');
-	set(handles.statusEdit,'String','');drawnow;
-	return;
-end
+[nucfile,nucpath]=uigetfile({'*.tif;*.tiff;*.lsm'},'select nucleus stack or lsm file',path);
 
-%load the FISH image stack from user specified path
-set(handles.statusEdit,'String','Reading FISH Image Data');drawnow;
-[FISHfile,FISHpath]=uigetfile({'*.tif;*.tiff'},'select FISH stack',nucpath);
-try
-	FISHstack=tiffread2(sprintf('%s/%s',FISHpath,FISHfile));
-catch
-	errordlg('GeneExpressMap requires tif stacks','Image Stack Import Error');
-	set(handles.statusEdit,'String','');drawnow;
-	return;
-end
+%handle lsm import
+[nucfileName,nucFileExt] = strtok(nucfile,'.');
+if strcmp(nucFileExt,'.lsm') == 1
+   %read data from the specified file
+   set(handles.statusEdit,'String','Reading LSM Image Data');drawnow;
+    lsmIm =  tiffread(sprintf('%s/%s',nucpath,nucfile));
+   
+   %make sure there is at least two channels of data
+   if size(lsmIm(1).data,2) <2
+       errordlg('GeneExpressMap requires 2 or 3 channel LSM files','LSM  Import Error');
+       set(handles.statusEdit,'String','');drawnow;
+       return;
+   end
+   
+   %break the lsm data into data individual stacks
+   if size(lsmIm(1).data,2) ==2
+       for ii = 1:length(lsmIm)
+           nucstack(ii).data = lsmIm(ii).data{1};
+           nucstack(ii).height = lsmIm(ii).height;
+           nucstack(ii).width = lsmIm(ii).width;
+           FISHstack(ii).data = lsmIm(ii).data{2};
+       end
+       FISHstack2 = FISHstack;
+    elseif size(lsmIm(1).data,2) == 3
+        for ii = 1:length(lsmIm)
+           nucstack(ii).data = lsmIm(ii).data{1};
+           nucstack(ii).height = lsmIm(ii).height;
+           nucstack(ii).width = lsmIm(ii).width;
+           FISHstack(ii).data = lsmIm(ii).data{2};
+           FISHstack2(ii).data = lsmIm(ii).data{3};
+       end
+    else
+        errordlg('GeneExpressMap requires 2 or 3 channel LSM files','LSM  Import Error');
+        set(handles.statusEdit,'String','');drawnow;
+        return;
+   end
+    
+   %use the lsm meta data to set xy and z resolution values
+   set(handles.xyresEdit,'String',num2str(lsmIm(1).lsm.VoxelSizeX*1000000));
+   set(handles.zresEdit,'String',num2str(lsmIm(1).lsm.VoxelSizeZ*1000000));
+else
+    set(handles.statusEdit,'String','Reading Nucleus Image Data');drawnow;
+    try
+        nucstack=tiffread(sprintf('%s/%s',nucpath,nucfile));
+    catch E
+        errordlg('GeneExpressMap requires tif stacks or LSM files','Image Stack Import Error');
+        set(handles.statusEdit,'String','');drawnow;
+        return;
+    end
 
-%load the FISH2 image stack from user specified path
-set(handles.statusEdit,'String','Reading FISH Image 2 Data');drawnow;
-[FISHfile,FISHpath]=uigetfile({'*.tif;*.tiff'},'select FISH stack 2',nucpath);
-try
-	FISHstack2=tiffread2(sprintf('%s/%s',FISHpath,FISHfile));
-catch
-	errordlg('GeneExpressMap requires tif stacks','Image Stack Import Error');
-	set(handles.statusEdit,'String','');drawnow;
-	return;
+    %load the FISH image stack from user specified path
+    set(handles.statusEdit,'String','Reading FISH Image Data');drawnow;
+    [FISHfile,FISHpath]=uigetfile({'*.tif;*.tiff'},'select FISH stack',nucpath);
+    try
+        FISHstack=tiffread(sprintf('%s/%s',FISHpath,FISHfile));
+    catch E
+        errordlg('GeneExpressMap requires tif stacks or LSM files','Image Stack Import Error');
+        set(handles.statusEdit,'String','');drawnow;
+        return;
+    end
+
+    %load the FISH2 image stack from user specified path
+    set(handles.statusEdit,'String','Reading FISH Image 2 Data');drawnow;
+    [FISHfile,FISHpath]=uigetfile({'*.tif;*.tiff'},'select FISH stack 2',nucpath);
+    try
+        FISHstack2=tiffread(sprintf('%s/%s',FISHpath,FISHfile));
+    catch E
+        errordlg('GeneExpressMap requires tif stacks or LSM files','Image Stack Import Error');
+        set(handles.statusEdit,'String','');drawnow;
+        return;
+    end
 end
 
 %check for dimension mismatch in the loaded data sets
-nucSize = size(nucstack);
-FISHSize = size(FISHstack);
-FISHSize2 = size(FISHstack2);
+nucSize = size(nucstack(1).data);
+FISHSize = size(FISHstack(1).data);
+FISHSize2 = size(FISHstack2(1).data);
 
 if nucSize(1) ~= FISHSize(1) ||  nucSize(1) ~= FISHSize2(1)
 	errordlg('GeneExpressMap requires image stacks of equal size','Image Size Error');
@@ -323,7 +367,7 @@ handles.currentstack1=handles.nucstack;
 
 %convert the FISH data into a double stack and normalize from 0 to 1 for display
 set(handles.statusEdit,'String','Converting FISH Data to Stack');drawnow;
-handles.FISHstack=zeros(FISHstack(1).height,FISHstack(1).width,length(FISHstack));
+handles.FISHstack=zeros(nucstack(1).height,nucstack(1).width,length(nucstack));
 for N=1:length(FISHstack)
     handles.FISHstack(:,:,N)=double(FISHstack(N).data);
     handles.FISHstack(:,:,N)=handles.FISHstack(:,:,N)/max(max(handles.FISHstack(:,:,N)));
@@ -332,7 +376,7 @@ handles.currentstack2=handles.FISHstack;
 
 %convert the FISH2 data into a double stack and normalize from 0 to 1 for display
 set(handles.statusEdit,'String','Converting FISH Data 2 to Stack');drawnow;
-handles.FISHstack2=zeros(FISHstack2(1).height,FISHstack2(1).width,length(FISHstack2));
+handles.FISHstack2=zeros(nucstack(1).height,nucstack(1).width,length(nucstack));
 for N=1:length(FISHstack)
     handles.FISHstack2(:,:,N)=double(FISHstack2(N).data);
     handles.FISHstack2(:,:,N)=handles.FISHstack2(:,:,N)/max(max(handles.FISHstack2(:,:,N)));
