@@ -20,7 +20,7 @@ function varargout = GeneExpressMap(varargin)
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Last Modified by GUIDE v2.5 14-Jun-2011 14:49:44
+% Last Modified by GUIDE v2.5 16-Jun-2011 12:16:59
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1979,8 +1979,9 @@ guidata(hObject, handles);
 
 
 % --------------------------------------------------------------------
-function menu_LoadSession_Callback(hObject, eventdata, handles)
+function menu_OpenSession_Callback(hObject, eventdata, handles)
 [file,path]=uigetfile('.mat','Select Session File');
+set(handles.statusEdit,'String','loading Session');drawnow;
 load(sprintf('%s%s',path,file));
 
 %build a cell containing all possible application variables
@@ -2054,9 +2055,212 @@ set(handles.ImageSlider,'Max',widgetState.imageSliderMax);
 %update the guidata and images
 update_images(hObject,handles);
 guidata(hObject, handles); 
+set(handles.statusEdit,'String','');drawnow;
 
 function closeGUI(src,evt)
 handles = guidata(src);
+if handles.saveFlag == 0
+    selection = questdlg('You have not saved your current session.  Would you like to close without saving?',...
+                         'Close Without Saving',...
+                         'No','Yes','No');
+    switch selection,
+       case 'No',
+        return
+       case 'Yes'
+         delete(gcf);
+    end
+else
+    delete(gcf);
+end
+
+
+% --- Executes on button press in nucThreshEditUp.
+function nucThreshEditUp_Callback(hObject, eventdata, handles)
+editFieldIncrement(hObject,handles, 'NucThreshEdit',0.01);
+try
+	NucThreshButton_Callback(hObject, eventdata, handles);
+catch E
+	set(handles.statusEdit,'String','');drawnow;
+end
+
+% --- Executes on button press in nucThreshEditDown.
+function nucThreshEditDown_Callback(hObject, eventdata, handles)
+editFieldIncrement(hObject,handles, 'NucThreshEdit',-0.01);
+try
+	NucThreshButton_Callback(hObject, eventdata, handles);
+catch E
+	set(handles.statusEdit,'String','');drawnow;
+end
+
+% --- Executes on button press in FISHThreshEditUp.
+function FISHThreshEditUp_Callback(hObject, eventdata, handles)
+editFieldIncrement(hObject,handles, 'FISHThreshEdit',0.01);
+try
+	FISHThreshButton_Callback(hObject, eventdata, handles);
+catch E
+	set(handles.statusEdit,'String','');drawnow;
+end
+
+% --- Executes on button press in FISHThreshEditDown.
+function FISHThreshEditDown_Callback(hObject, eventdata, handles)
+editFieldIncrement(hObject,handles, 'FISHThreshEdit',-0.01);
+try
+	FISHThreshButton_Callback(hObject, eventdata, handles);
+catch E
+	set(handles.statusEdit,'String','');drawnow;
+end
+
+% --- Executes on button press in FISHThreshEdit2Up.
+function FISHThreshEdit2Up_Callback(hObject, eventdata, handles)
+editFieldIncrement(hObject,handles, 'FISHThreshEdit2',0.01);
+try
+	FISHThresh2Button_Callback(hObject, eventdata, handles);
+catch E
+	set(handles.statusEdit,'String','');drawnow;
+end
+
+% --- Executes on button press in FISHThreshEdit2Down.
+function FISHThreshEdit2Down_Callback(hObject, eventdata, handles)
+editFieldIncrement(hObject,handles, 'FISHThreshEdit2',-0.01);
+try
+	FISHThresh2Button_Callback(hObject, eventdata, handles);
+catch E
+	set(handles.statusEdit,'String','');drawnow;
+end
+
+% --- Executes on button press in nucOpenEditUp.
+function nucOpenEditUp_Callback(hObject, eventdata, handles)
+editFieldIncrement(hObject,handles, 'NucOpenEdit',0.1);
+try
+	OpenNucButton_Callback(hObject, eventdata, handles);
+catch E
+	set(handles.statusEdit,'String','');drawnow;
+end
+
+% --- Executes on button press in nucOpenEditDown.
+function nucOpenEditDown_Callback(hObject, eventdata, handles)
+editFieldIncrement(hObject,handles, 'NucOpenEdit',-0.1);
+try
+	OpenNucButton_Callback(hObject, eventdata, handles);
+catch E
+	set(handles.statusEdit,'String','');drawnow;
+end
+
+% --- Executes on button press in FISHOpenEditUp.
+function FISHOpenEditUp_Callback(hObject, eventdata, handles)
+editFieldIncrement(hObject,handles, 'FISHOpenEdit',0.1);
+try
+	OpenFISHButton_Callback(hObject, eventdata, handles);
+catch E
+	set(handles.statusEdit,'String','');drawnow;
+end
+
+% --- Executes on button press in FISHOpenEditDown.
+function FISHOpenEditDown_Callback(hObject, eventdata, handles)
+editFieldIncrement(hObject,handles, 'FISHOpenEdit',-0.1);
+try
+	OpenFISHButton_Callback(hObject, eventdata, handles);
+catch E
+	set(handles.statusEdit,'String','');drawnow;
+end
+
+% --- Executes on button press in FISHDilateEditUp.
+function FISHDilateEditUp_Callback(hObject, eventdata, handles)
+editFieldIncrement(hObject,handles, 'FISHDilateEdit',0.1);
+try
+	DilateFISHButton_Callback(hObject, eventdata, handles);
+catch E
+	set(handles.statusEdit,'String','');drawnow;
+end
+
+% --- Executes on button press in FISHDilateEditDown.
+function FISHDilateEditDown_Callback(hObject, eventdata, handles)
+editFieldIncrement(hObject,handles, 'FISHDilateEdit',-0.1);
+try
+	DilateFISHButton_Callback(hObject, eventdata, handles);
+catch E
+	set(handles.statusEdit,'String','');drawnow;
+end
+
+% --- Executes on button press in FISHOpenEdit2Up.
+function FISHOpenEdit2Up_Callback(hObject, eventdata, handles)
+editFieldIncrement(hObject,handles, 'FISHOpenEdit2',0.1);
+try
+OpenFISH2Button_Callback(hObject, eventdata, handles);
+catch E
+	set(handles.statusEdit,'String','');drawnow;
+end
+
+% --- Executes on button press in FISHOpenEdit2Down.
+function FISHOpenEdit2Down_Callback(hObject, eventdata, handles)
+editFieldIncrement(hObject,handles, 'FISHOpenEdit2',-0.1);
+try
+	OpenFISH2Button_Callback(hObject, eventdata, handles);
+catch E
+	set(handles.statusEdit,'String','');drawnow;
+end
+
+% --- Executes on button press in FISHDilateEdit2Up.
+function FISHDilateEdit2Up_Callback(hObject, eventdata, handles)
+editFieldIncrement(hObject,handles, 'FISHDilateEdit2',0.1);
+try
+	DilateFISH2Button_Callback(hObject, eventdata, handles);
+catch E
+	set(handles.statusEdit,'String','');drawnow;
+end
+
+% --- Executes on button press in FISHDilateEdit2Down.
+function FISHDilateEdit2Down_Callback(hObject, eventdata, handles)
+editFieldIncrement(hObject,handles, 'FISHDilateEdit2',-0.1);
+try
+	DilateFISH2Button_Callback(hObject, eventdata, handles);
+catch E
+	set(handles.statusEdit,'String','');drawnow;
+end
+
+% --- Executes on button press in DistThreshEditUp.
+function DistThreshEditUp_Callback(hObject, eventdata, handles)
+editFieldIncrement(hObject,handles, 'DistThreshEdit',1);
+try
+	FindNucButton_Callback(hObject, eventdata, handles);
+catch E
+	set(handles.statusEdit,'String','');drawnow;
+end
+
+% --- Executes on button press in DistThreshEditDown.
+function DistThreshEditDown_Callback(hObject, eventdata, handles)
+editFieldIncrement(hObject,handles, 'DistThreshEdit',-1);
+try
+	FindNucButton_Callback(hObject, eventdata, handles);
+catch E
+	set(handles.statusEdit,'String','');drawnow;
+end
+% --- Executes on button press in overlapEditUp.
+function overlapEditUp_Callback(hObject, eventdata, handles)
+editFieldIncrement(hObject,handles, ' overlapEdit',1);
+try
+	FindPosNucButton_Callback(hObject, eventdata, handles);
+catch E
+	set(handles.statusEdit,'String','');drawnow;
+end
+
+% --- Executes on button press in overlapEditDown.
+function overlapEditDown_Callback(hObject, eventdata, handles)
+editFieldIncrement(hObject,handles, ' overlapEdit',-1);
+try
+	FindPosNucButton_Callback(hObject, eventdata, handles);
+catch E
+	set(handles.statusEdit,'String','');
+end
+
+function editFieldIncrement(hObject,handles, fieldName,incrementValue)
+val = eval(get(eval(sprintf('handles.%s',fieldName)),'String'));
+set(eval(sprintf('handles.%s',fieldName)),'String',num2str(val+incrementValue));
+guidata(hObject, handles); 
+
+
+% --------------------------------------------------------------------
+function menu_Quit_Callback(hObject, eventdata, handles)
 if handles.saveFlag == 0
     selection = questdlg('You have not saved your current session.  Would you like to close without saving?',...
                          'Close Without Saving',...
